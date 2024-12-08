@@ -1,11 +1,10 @@
-
-from datetime import timezone, datetime, time, timedelta
-
+import time
+from datetime import timezone, datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Keys
-
+from src.conference.audio import audio
 
 
 def meet_on_telemost(meet):
@@ -24,10 +23,11 @@ def meet_on_telemost(meet):
     driver = webdriver.Chrome(options=opt)
     driver.implicitly_wait(20)
     driver.get('https://telemost.yandex.ru/connect-to-meeting-by-id')
+    time.sleep(2)
     driver.find_element(By.XPATH,'//*[@id="root"]/div/div[2]/div[2]/div/div/div/form/span/input').send_keys(meet.room_uri)
     driver.find_element(By.XPATH,'//*[@id="root"]/div/div[2]/div[2]/div/div/div/form/button').click()
+    time.sleep(1)
     driver.find_element(By.XPATH,'//*[@id="root"]/div/div[2]/div/div[1]/div/div/button').click()
-
 
 
 
@@ -41,11 +41,18 @@ def meet_on_telemost(meet):
 
     el.send_keys('MinutesBot')
 
+    time.sleep(2)
     driver.find_element(By.XPATH,'//*[@id="root"]/div/div[2]/div/div[1]/div/div[2]/div/div[2]/div[2]/div/div[2]/div/div/div[2]/button').click()
 
-    if meet.end_meet_date >= datetime.now(timezone.utc):
-        driver.quit()
+    # начинаем запись конференции
+    audio(meet.room_uri)
 
+    # Проверяем не закончилась ли встреча
+    while datetime.now() <= meet.end_meet_date:
+        time.sleep(10)
+
+    # Если время встречи подошло к концу, то выходим
+    driver.quit()
 
 
 def meet_on_skype(url):
@@ -78,15 +85,6 @@ def meet_on_skype(url):
     leave = driver.find_element(By.XPATH,'/html/body/div[1]/div/div/div[1]/div/div[2]/div/div/div['
                                  '1]/div/div[1]/div/div/div/div[11]/div/div[2]/div[2]/button')
     leave.click()
-
-
-
-
-
-
-
-
-meet_on_telemost()
 
 
 

@@ -1,6 +1,8 @@
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
+from src.creds import TMP_PATH
+
 
 def speech(meet):
 
@@ -30,7 +32,7 @@ def speech(meet):
     )
 
 
-    file_name = f'./././tmp/{meet.room_uri}.mp3'
+    file_name = f'{TMP_PATH}/{meet.room_uri[21:]}.mp3'
 
     from IPython.display import Audio
     Audio(file_name)

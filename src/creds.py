@@ -1,3 +1,5 @@
+import os
+
 EMAIL = ''
 SERVER_MAIL = 'smtp.yandex.ru'
 SERVER_PORT = 587
@@ -9,5 +11,9 @@ PASSWORD_CALENDAR = ''
 DB_USER = ''
 DB_PASSWORD = ''
 DB_HOST = "127.0.0.1"
+
+
+
+TMP_PATH = ''
 
 
