@@ -21,7 +21,7 @@ def processing(text):
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     generation_config = GenerationConfig.from_pretrained(MODEL_NAME)
 
-    inputs = [f"подведи итоги в тексте и выдели основную мысль:{text}"]
+    inputs = [f"Выдели тему текста и Подведи итоги по пунктам о чем говорится в тексте:{text}"]
 
     for query in inputs:
         prompt = tokenizer.apply_chat_template([{
