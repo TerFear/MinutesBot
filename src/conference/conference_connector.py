@@ -45,11 +45,12 @@ def meet_on_telemost(meet):
     driver.find_element(By.XPATH,'//*[@id="root"]/div/div[2]/div/div[1]/div/div[2]/div/div[2]/div[2]/div/div[2]/div/div/div[2]/button').click()
 
     # начинаем запись конференции
-    audio(meet.room_uri)
+    print('Началось запись аудио')
+    audio(meet)
 
     # Проверяем не закончилась ли встреча
     while datetime.now() <= meet.end_meet_date:
-        time.sleep(10)
+        time.sleep(2)
 
     # Если время встречи подошло к концу, то выходим
     driver.quit()
