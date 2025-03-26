@@ -1,15 +1,12 @@
-import time
+import json
 from datetime import datetime
-from src.database.database_controller import Meets
-from src.mail.aprove_meets import get_message_for_users
+from src.database.SQl.database_controller import Meets
 import caldav
 import re
 import src.creds as creds
 import peewee
-from src.conference.conference_connector import meet_on_telemost
-from src.mail.send_email import send_email
-from src.ml_models.speech_to_text import speech
-from src.ml_models.text_summarization import processing
+import requests
+
 
 class MeetPattern:
     def __init__(self, pattern, provider):
@@ -30,40 +27,6 @@ class CalendarMeet:
         self.is_answered = None
         self.need_process = None
         self.end_meet_date = None
-
-
-def process_meet(meet):
-    """Подключиться к собранию и обработать его"""
-
-    # Подключились ко встрече (Selenim)
-    meet.meet_finished = False
-    meet.is_processed = True
-    meet.save()
-
-    meet_on_telemost(meet)
-    print('Конференция была завершена')
-
-    meet.is_processed = False
-    meet.save()
-
-    # Распознали текст из файла (openai/whisper-large-v3-turbo)
-    print('Нейросеть начинает считывать аудио файл')
-    text = speech(meet)
-    print('Аудио было успешно переведено в текст')
-    time.sleep(10)
-    # Подведение итогов встречи (ChatGPT/Llama)
-    print('Начинается суммаризация текста')
-    summary = processing(text)
-    print('Суммаризация была успешно завершена')
-
-    # Отправка итогов встерчи по почте (SMTPLib)
-    print('Начинается рассылка результатов')
-    send_email(summary, meet)
-    print('Все письма были успешно доставлены на email')
-
-    meet.meet_finished = True
-    meet.need_process = False
-    meet.save()
 
 
 
@@ -136,18 +99,36 @@ def update_meets_in_db():
             new_meet.save()
             print('Встреча была успешна сохранена в базу данных ')
 
+def mail(meet):
+    data = {'to': [meet.organizer], 'subject': "Потверждение встречи", "body": f"Встреча была приянта на :{meet.meet_date},бот сможет подключиться к видеоконференции."}
+    response  = requests.post("http://localhost:8000/send-email", json=data)
+    print(response.text)
+
 
 def search_answered():
     for meet in Meets.select().where(Meets.is_answered == False):
-        get_message_for_users(meet)
+
+        mail(meet)
         print('Письмо с подтверждением подключения к конференции было успешно доставлено')
         meet.is_answered = True
         meet.need_process = True
         meet.save()
 
 
-def process():
+def connect_on_meet():
     for meet in Meets.select().where(Meets.need_process == True):
         if meet.meet_date <= datetime.now() <= meet.end_meet_date:
             print('Программа начинает подключение к конференции')
-            process_meet(meet)
+            response = requests.get(f"http://localhost:80/connect/{meet.room_uri[21:]}")
+            print(response.text)
+            meet.need_process = False
+            meet.is_processed = True
+            meet.save()
+            print("Подключение к конференции было супешно завершенно")
+
+
+
+
+
+
+
